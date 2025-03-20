@@ -1,14 +1,12 @@
 //
 // Created by alear on 18/3/2025.
 //
-
 #include "Server.h"
 #include "ConnectionHandler.h"
 #include <iostream>
 #include <unistd.h>
 
 Server::Server(int port) : port(port) {
-
 #ifdef _WIN32
     // Inicializar Winsock
     WSADATA wsaData;
@@ -17,7 +15,6 @@ Server::Server(int port) : port(port) {
         exit(EXIT_FAILURE);
     }
 #endif
-
 
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1) {
@@ -45,6 +42,11 @@ Server::~Server() {
     for (auto& t : clientThreads) {
         if (t.joinable()) t.join();
     }
+
+#ifdef _WIN32
+    // Limpiar Winsock
+    WSACleanup();
+#endif
 }
 
 void Server::acceptConnections() {
