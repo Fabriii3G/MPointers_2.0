@@ -4,11 +4,9 @@
 #include "Server.h"
 #include "ConnectionHandler.h"
 #include <iostream>
-#include <unistd.h>
 
-Server::Server(int port) : port(port) {
+Server::Server(int port, size_t memorySize) : port(port), memoryManager(memorySize) {
 #ifdef _WIN32
-    // Inicializar Winsock
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         std::cerr << "Error al inicializar Winsock" << std::endl;
@@ -38,13 +36,16 @@ Server::Server(int port) : port(port) {
 }
 
 Server::~Server() {
+#ifdef _WIN32
+    closesocket(serverSocket);
+#else
     close(serverSocket);
+#endif
+
     for (auto& t : clientThreads) {
         if (t.joinable()) t.join();
     }
-
 #ifdef _WIN32
-    // Limpiar Winsock
     WSACleanup();
 #endif
 }
@@ -61,11 +62,15 @@ void Server::acceptConnections() {
         }
 
         std::cout << "Cliente conectado" << std::endl;
-        clientThreads.emplace_back(&ConnectionHandler::handleClient, clientSocket);
+        clientThreads.emplace_back(&ConnectionHandler::handleClient, clientSocket, std::ref(memoryManager));
     }
 }
 
 void Server::start() {
     std::cout << "Servidor iniciado en el puerto " << port << std::endl;
     acceptConnections();
+}
+
+MemoryManager& Server::getMemoryManager() {
+    return memoryManager;
 }

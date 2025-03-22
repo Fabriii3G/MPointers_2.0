@@ -27,11 +27,11 @@ int main() {
     // Configurar la dirección del servidor
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(8080);  // Puerto del servidor
+    serverAddr.sin_port = htons(6060);  // Puerto del servidor
     inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);  // Dirección IP del servidor (localhost)
 
     // Conectar al servidor
-    std::cout << "Intentando conectar al servidor en 127.0.0.1:8080..." << std::endl;
+    std::cout << "Intentando conectar al servidor en 127.0.0.1:6060..." << std::endl;
 
     if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
         std::cerr << "Error al conectar al servidor" << std::endl;
