@@ -18,7 +18,7 @@ private:
     std::unordered_map<int, MemoryBlock*> allocations;
     std::mutex mtx;
     int nextId;
-    GarbageCollector gc;  // Agregar Garbage Collector
+    //GarbageCollector gc;  // Agregar Garbage Collector
 
 public:
     MemoryManager(size_t sizeMB);

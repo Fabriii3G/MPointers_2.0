@@ -10,16 +10,8 @@ MemoryManager::MemoryManager(size_t sizeMB)
     : totalSize(sizeMB * 1024 * 1024),
       memoryPool(malloc(totalSize)),
       head(new MemoryBlock(memoryPool, totalSize)),
-      nextId(1),
-      gc(this) {  // Aquí inicializamos gc correctamente
-
-    if (!memoryPool) {
-        throw std::runtime_error("Error al reservar memoria.");
-    }
-
-    gc.start();  // Ahora podemos iniciarlo
+      nextId(1) {
 }
-
 
 MemoryManager::~MemoryManager() {
     free(memoryPool);

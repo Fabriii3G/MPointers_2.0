@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <cstring>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
@@ -27,15 +28,14 @@ int main() {
     // Configurar la dirección del servidor
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(6060);  // Puerto del servidor
-    inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);  // Dirección IP del servidor (localhost)
+    serverAddr.sin_port = htons(6060);
+    inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
     // Conectar al servidor
     std::cout << "Intentando conectar al servidor en 127.0.0.1:6060..." << std::endl;
-
-    if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+    if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         std::cerr << "Error al conectar al servidor" << std::endl;
-        std::cerr << "Código de error: " << WSAGetLastError() << std::endl;  // Solo en Windows
+        std::cerr << "Código de error: " << WSAGetLastError() << std::endl;
         closesocket(clientSocket);
         WSACleanup();
         return 1;
@@ -43,18 +43,32 @@ int main() {
 
     std::cout << "Conectado al servidor" << std::endl;
 
-    // Enviar un mensaje al servidor
-    const char* message = "Hola, servidor!";
-    send(clientSocket, message, strlen(message), 0);
-
-    // Recibir la respuesta del servidor
+    // Interacción con el servidor en bucle
+    std::string message;
     char buffer[1024] = {0};
-    recv(clientSocket, buffer, sizeof(buffer), 0);
-    std::cout << "Respuesta del servidor: " << buffer << std::endl;
+    while (true) {
+        std::cout << "Ingrese comando (CREATE, SET, GET, INCREF, DECREF o EXIT): ";
+        std::getline(std::cin, message);
+
+        if (message == "EXIT") {
+            break;
+        }
+
+        send(clientSocket, message.c_str(), message.size(), 0);
+
+        // Recibir la respuesta del servidor
+        memset(buffer, 0, sizeof(buffer));
+        int bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+        if (bytesReceived <= 0) {
+            std::cerr << "Conexión cerrada por el servidor" << std::endl;
+            break;
+        }
+
+        std::cout << "Respuesta del servidor: " << buffer << std::endl;
+    }
 
     // Cerrar el socket y limpiar Winsock
     closesocket(clientSocket);
     WSACleanup();
-
     return 0;
 }
