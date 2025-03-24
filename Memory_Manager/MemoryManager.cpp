@@ -176,10 +176,10 @@ bool MemoryManager::decreaseRefCount(int id) {
 
 void MemoryManager::dumpMemoryState() {
     std::lock_guard<std::mutex> lock(mtx);
-    std::cout << " Estado actual de la memoria:\n";
+    std::cout << "Estado actual de la memoria:\n";
     MemoryBlock* current = head;
     while (current) {
-        std::cout << "🔹 Direccion: " << current->address
+        std::cout << "Direccion: " << current->address
                   << " | Tamano: " << current->size
                   << " | RefCount: " << current->refCount
                   << " | Estado: " << (current->free ? "Libre" : "Ocupado") << "\n";
