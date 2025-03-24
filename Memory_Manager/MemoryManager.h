@@ -9,6 +9,8 @@
 #include "GarbageCollector.h"
 #include <unordered_map>
 #include <mutex>
+#include <string>
+
 
 class MemoryManager {
 private:
@@ -18,17 +20,19 @@ private:
     std::unordered_map<int, MemoryBlock*> allocations;
     std::mutex mtx;
     int nextId;
+    void splitBlock(MemoryBlock* block, size_t size);
+
     //GarbageCollector gc;  // Agregar Garbage Collector
 
 public:
     MemoryManager(size_t sizeMB);
     ~MemoryManager();
 
-    int create(size_t size);
+    int create(size_t size, const std::string& type);
     void* get(int id);
-    void set(int id, const void* data, size_t dataSize);
-    void increaseRefCount(int id);
-    void decreaseRefCount(int id);
+    bool set(int id, const std::string& value);
+    bool increaseRefCount(int id);
+    bool decreaseRefCount(int id);
     void collectGarbage();  // Nuevo metodo para el GC
     void dumpMemoryState();
 
