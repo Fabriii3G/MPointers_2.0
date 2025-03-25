@@ -5,10 +5,10 @@
 #include <iostream>
 
 int main() {
-    std::cout << "Servidor en ejecución..." << std::endl;
+    std::cout << "Servidor en ejecucion..." << std::endl;
 
     // Crear una instancia del servidor en el puerto 6060
-    Server server(6060, 10);
+    Server server(6060, 70);
 
     // Iniciar el servidor
     server.start();

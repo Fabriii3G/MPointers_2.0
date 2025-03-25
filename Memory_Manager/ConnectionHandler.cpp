@@ -32,15 +32,22 @@ void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryMana
 
         std::string response;
         if (action == "CREATE") {
-            size_t size;
-            ss >> size;
-            int id = memoryManager.create(size);
-            response = (id != -1) ? "CREATED " + std::to_string(id) : "ERROR No memory";
+            size_t size = 0;
+            std::string type;
+
+            ss >> size >> type;  // Capturar tamaño y tipo
+
+            if (size == 0 || type.empty()) {  // Validar si no se ingresó correctamente
+                response = "ERROR Invalid size or type";
+            } else {
+                int id = memoryManager.create(size, type);  // ✅ Pasar tamaño y tipo al MemoryManager
+                response = (id != -1) ? "CREATED " + std::to_string(id) + " TYPE " + type : "ERROR No memory";
+            }
         } else if (action == "SET") {
             int id;
             std::string value;
             ss >> id >> value;
-            memoryManager.set(id, value.c_str(), value.size());
+            memoryManager.set(id, value);
             response = "SET OK";
         } else if (action == "GET") {
             int id;
