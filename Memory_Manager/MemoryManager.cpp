@@ -120,7 +120,7 @@ void* MemoryManager::get(int id) {
 
 bool MemoryManager::set(int id, const std::string& value) {
     std::lock_guard<std::mutex> lock(mtx);
-
+    std::cout << "[DEBUG] SET llamado para ID " << id << std::endl;
     if (allocations.find(id) == allocations.end()) {
         std::cerr << "SET: Error, ID no encontrado.\n";
         return false;

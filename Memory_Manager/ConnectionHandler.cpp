@@ -6,6 +6,8 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include "MPointer.h"
+
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -15,6 +17,9 @@
 #endif
 
 void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryManager) {
+    //  Establecer MemoryManager en MPointer antes de crear cualquier instancia
+    MPointer<int>::setMemoryManager(&memoryManager);
+
     char buffer[1024] = {0};
 
     while (true) {
@@ -31,39 +36,43 @@ void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryMana
         ss >> action;
 
         std::string response;
+
         if (action == "CREATE") {
-            size_t size = 0;
-            std::string type;
+            MPointer<int> ptr = MPointer<int>::New();
+            response = "CREATED " + std::to_string(ptr.GetID());
 
-            ss >> size >> type;  // Capturar tamaño y tipo
-
-            if (size == 0 || type.empty()) {  // Validar si no se ingresó correctamente
-                response = "ERROR Invalid size or type";
-            } else {
-                int id = memoryManager.create(size, type);  // ✅ Pasar tamaño y tipo al MemoryManager
-                response = (id != -1) ? "CREATED " + std::to_string(id) + " TYPE " + type : "ERROR No memory";
-            }
         } else if (action == "SET") {
-            int id;
-            std::string value;
+            int id, value;
             ss >> id >> value;
-            memoryManager.set(id, value);
+
+            MPointer<int> ptr(id);  // Se asocia al ID existente en MemoryManager
+            *ptr = value;  // Se asigna el valor al objeto en memoria
+
             response = "SET OK";
+
         } else if (action == "GET") {
             int id;
             ss >> id;
-            void* data = memoryManager.get(id);
-            response = data ? std::string("VALUE ") + static_cast<char*>(data) : "ERROR Not found";
+
+            MPointer<int> ptr(id);  // Obtener el MPointer con el ID
+            response = "VALUE " + std::to_string(*ptr);
+
         } else if (action == "INCREF") {
             int id;
             ss >> id;
-            memoryManager.increaseRefCount(id);
-            response = "INCREF OK";
+
+            MPointer<int> ptr(id);
+            response = "INCREF OK";  // El constructor ya incrementa la referencia
+
         } else if (action == "DECREF") {
             int id;
             ss >> id;
-            memoryManager.decreaseRefCount(id);
+
+            MPointer<int> ptr(id);
+            ptr = nullptr;  // Libera referencia
+
             response = "DECREF OK";
+
         } else {
             response = "ERROR Unknown command";
         }
@@ -76,5 +85,4 @@ void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryMana
 #else
     close(clientSocket);
 #endif
-
 }

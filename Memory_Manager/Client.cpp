@@ -60,7 +60,7 @@ int main() {
         memset(buffer, 0, sizeof(buffer));
         int bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
         if (bytesReceived <= 0) {
-            std::cerr << "Conexión cerrada por el servidor" << std::endl;
+            std::cerr << "Conexion cerrada por el servidor" << std::endl;
             break;
         }
 

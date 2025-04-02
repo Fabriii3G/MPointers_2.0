@@ -2,73 +2,93 @@
 #define MPOINTER_TPP
 
 #include "MPointer.h"
-#include "MemoryManager.h"
 
-// Constructor privado
+// Constructor privado: Se usa solo dentro de New()
 template <typename T>
-MPointer<T>::MPointer() : ptr(nullptr), id(-1) {}
+MPointer<T>::MPointer(int objectID) : id(objectID) {
+    if (memoryManager) {
+        ptr = static_cast<T*>(memoryManager->get(id));
+    } else {
+        ptr = nullptr;
+    }
+    std::cout << "[DEBUG] MPointer creado con ID " << id << " en direccion " << ptr << std::endl;
+}
 
-// Metodo estático New
+// Metodo para inicializar el MemoryManager antes de usar MPointer
+template <typename T>
+void MPointer<T>::setMemoryManager(MemoryManager* manager) {
+    memoryManager = manager;
+}
+
+// Crea un nuevo MPointer, asignando memoria en MemoryManager
 template <typename T>
 MPointer<T> MPointer<T>::New() {
-    MPointer<T> newPtr;
-    newPtr.id = MemoryManager::create(sizeof(T), typeid(T).name());  // Solicita un nuevo bloque de memoria al MemoryManager
-    return newPtr;
+    if (!memoryManager) {
+        throw std::runtime_error("MemoryManager no configurado en MPointer!");
+    }
+    int objectID = memoryManager->create(sizeof(T), typeid(T).name());  // Crea memoria en MemoryManager
+    std::cout << "Hola" << std::endl;
+    return MPointer<T>(objectID);  // Devuelve un MPointer asociado al ID
 }
 
-// Destructor
+// Destructor: Libera referencia en MemoryManager
 template <typename T>
 MPointer<T>::~MPointer() {
-    if (id != -1) {
-        MemoryManager::decreaseRefCount(id);  // Indica que la referencia se ha destruido
+    std::cout << "[DEBUG] Destructor de MPointer llamado para ID " << id << std::endl;
+    if (memoryManager && id != -1) {
+        //memoryManager->decreaseRefCount(id);
     }
 }
 
-// Sobrecarga del operador *
+// Sobrecarga del operador * (Acceso a datos)
 template <typename T>
 T& MPointer<T>::operator*() {
-    return *static_cast<T*>(MemoryManager::get(id));  // Obtiene el valor del MemoryManager
+    //memoryManager->set(id, ptr);
+    return *ptr;
 }
 
-// Sobrecarga del operador &
+// Sobrecarga del operador & (Devuelve la dirección de memoria)
 template <typename T>
 T* MPointer<T>::operator&() {
-    return reinterpret_cast<T*>(id);  // Retorna la dirección (ID) del bloque de memoria
+    return ptr;
 }
 
-// Sobrecarga del operador = (asignación de otro MPointer)
+// Asignación de un MPointer a otro
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(const MPointer<T>& other) {
+    std::cout << "[DEBUG] Operador = llamado: " << id << " -> " << other.id << std::endl;
     if (this != &other) {
-        if (id != -1) {
-            MemoryManager::decreaseRefCount(id);  // Libera la referencia anterior
+        if (memoryManager) {
+            memoryManager->increaseRefCount(other.id);
+            memoryManager->decreaseRefCount(id);
         }
         id = other.id;
-        MemoryManager::increaseRefCount(id);  // Incrementa el conteo de referencias
+        ptr = other.ptr;
     }
     return *this;
 }
 
-// Sobrecarga del operador = (asignación de valor)
+// Asignación de un valor directamente a MPointer
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(const T& value) {
-    if (id != -1) {
-        MemoryManager::set(id, std::to_string(value));  // Almacena el valor en el MemoryManager
+    if (ptr) {
+        *ptr = value;
     }
     return *this;
 }
 
-// Sobrecarga del operador = (asignación nullptr)
+// Asignación de nullptr (Libera la memoria)
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(std::nullptr_t) {
-    if (id != -1) {
-        MemoryManager::decreaseRefCount(id);  // Libera la referencia
-        id = -1;
+    if (memoryManager) {
+        memoryManager->decreaseRefCount(id);
     }
+    ptr = nullptr;
+    id = -1;
     return *this;
 }
 
-// Obtiene el ID del MPointer
+// Devuelve el ID del objeto
 template <typename T>
 int MPointer<T>::GetID() const {
     return id;
@@ -78,7 +98,10 @@ int MPointer<T>::GetID() const {
 template <typename T>
 MPointer<T>::MPointer(const MPointer<T>& other) {
     id = other.id;
-    MemoryManager::increaseRefCount(id);  // Incrementa la referencia en el MemoryManager
+    ptr = other.ptr;
+    if (memoryManager) {
+        memoryManager->increaseRefCount(id);
+    }
 }
 
 #endif // MPOINTER_TPP
