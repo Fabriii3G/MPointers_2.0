@@ -1,11 +1,8 @@
-//
-// Created by alear on 19/3/2025.
-//
-
 #include <iostream>
 #include <cstring>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include "LinkedList.h"
 
 #pragma comment(lib, "ws2_32.lib")
 

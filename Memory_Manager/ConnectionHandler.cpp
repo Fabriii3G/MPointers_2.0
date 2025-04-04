@@ -1,7 +1,3 @@
-//
-// Created by alear on 19/3/2025.
-//
-
 #include "ConnectionHandler.h"
 #include <iostream>
 #include <sstream>
@@ -38,10 +34,27 @@ void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryMana
         std::string response;
 
         if (action == "CREATE") {
-            MPointer<int> ptr = MPointer<int>::New();
-            response = "CREATED " + std::to_string(ptr.GetID());
-
+            // Modificar que dependiendo el tamano y el tipo de dato se asigne un Mpointer designado
+            std::string type;
+            ss >> type;
+            if (type == "INT") {
+                MPointer<int> ptr = MPointer<int>::New();
+                response = "CREATED " + std::to_string(ptr.GetID());
+            }
+            else if (type == "BOOL") {
+                MPointer<bool> ptr = MPointer<bool>::New();
+                response = "CREATED " + std::to_string(ptr.GetID());
+            }
+            else if (type == "FLOAT") {
+                MPointer<float> ptr = MPointer<float>::New();
+                response = "CREATED " + std::to_string(ptr.GetID());
+            }
+            else if (type == "DOUBLE") {
+                MPointer<double> ptr = MPointer<double>::New();
+                response = "CREATED " + std::to_string(ptr.GetID());
+            }
         } else if (action == "SET") {
+            // ptr.gettype y asignar ese type a el value
             int id, value;
             ss >> id >> value;
 
@@ -61,15 +74,15 @@ void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryMana
             int id;
             ss >> id;
 
-            MPointer<int> ptr(id);
+            MPointer<int> ptr();
             response = "INCREF OK";  // El constructor ya incrementa la referencia
 
         } else if (action == "DECREF") {
             int id;
             ss >> id;
 
-            MPointer<int> ptr(id);
-            ptr = nullptr;  // Libera referencia
+            MPointer<int> ptr();
+            //ptr = nullptr;  // Libera referencia
 
             response = "DECREF OK";
 

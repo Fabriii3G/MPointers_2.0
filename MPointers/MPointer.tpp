@@ -23,10 +23,20 @@ void MPointer<T>::setMemoryManager(MemoryManager* manager) {
 // Crea un nuevo MPointer, asignando memoria en MemoryManager
 template <typename T>
 MPointer<T> MPointer<T>::New() {
-    if (!memoryManager) {
-        throw std::runtime_error("MemoryManager no configurado en MPointer!");
+    std::string type;
+
+    if (std::is_same<T, int>::value) {
+        type = "integer";
+    } else if (std::is_same<T, bool>::value) {
+        type = "boolean";
+        std::cout << sizeof(T) << std::endl;
+    } else if (std::is_same<T, float>::value) {
+        type = "float";
+    } else if (std::is_same<T, double>::value) {
+        type = "double";
     }
-    int objectID = memoryManager->create(sizeof(T), typeid(T).name());  // Crea memoria en MemoryManager
+    std::cout << "PP" << std::endl;
+    int objectID = memoryManager->create(sizeof(T), type);  // Crea memoria en MemoryManager
     std::cout << "Hola" << std::endl;
     return MPointer<T>(objectID);  // Devuelve un MPointer asociado al ID
 }
@@ -43,7 +53,8 @@ MPointer<T>::~MPointer() {
 // Sobrecarga del operador * (Acceso a datos)
 template <typename T>
 T& MPointer<T>::operator*() {
-    //memoryManager->set(id, ptr);
+
+    //memoryManager->set(id, std::to_string(*ptr));
     return *ptr;
 }
 

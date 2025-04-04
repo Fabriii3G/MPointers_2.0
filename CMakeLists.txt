@@ -21,6 +21,7 @@ add_executable(Client
 "Memory_Manager/Client.cpp"
         MPointers/MPointer.tpp
         MPointers/Mpointer.h
+        MPointers/LinkedList.h
 )
 # Enlaza la biblioteca ws2_32 (necesaria para sockets en Windows)
 target_link_libraries(Client ws2_32)

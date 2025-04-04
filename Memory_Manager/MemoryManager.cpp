@@ -1,7 +1,3 @@
-//
-// Created by alear on 21/3/2025.
-//
-
 #include "MemoryManager.h"
 #include <iostream>
 #include <cstring>
@@ -75,7 +71,6 @@ void MemoryManager::collectGarbage() {
 }
 
 int MemoryManager::create(size_t size, const std::string& type) {
-    std::cout << "Estado inicial de la memoria antes de CREATE:\n";
     dumpMemoryState();
 
     std::lock_guard<std::mutex> lock(mtx);
@@ -97,10 +92,15 @@ int MemoryManager::create(size_t size, const std::string& type) {
                 current->size = size;
             }
 
+
+            // Ahora almacenamos el tipo correctamente
+            current->type = type;
+
             current->free = false;
             allocations[nextId] = current;
             std::cout << "CREATE: Asignado ID " << nextId << " (Tamano: " << size << ", Tipo: " << type << ")\n";
             return nextId++;
+
         }
         current = current->next;
     }
@@ -118,7 +118,7 @@ void* MemoryManager::get(int id) {
 }
 
 
-bool MemoryManager::set(int id, const std::string& value) {
+bool MemoryManager::set(int id,  std::string& value) {
     std::lock_guard<std::mutex> lock(mtx);
     std::cout << "[DEBUG] SET llamado para ID " << id << std::endl;
     if (allocations.find(id) == allocations.end()) {

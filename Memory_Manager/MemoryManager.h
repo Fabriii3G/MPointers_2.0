@@ -30,7 +30,7 @@ public:
 
     int create(size_t size, const std::string& type);
     void* get(int id);
-    bool set(int id, const std::string& value);
+    bool set(int id,  std::string& value);
     bool increaseRefCount(int id);
     bool decreaseRefCount(int id);
     void collectGarbage();  // Nuevo metodo para el GC
