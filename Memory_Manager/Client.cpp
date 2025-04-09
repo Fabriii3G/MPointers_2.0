@@ -1,11 +1,8 @@
-//
-// Created by alear on 19/3/2025.
-//
-
 #include <iostream>
 #include <cstring>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include "LinkedList.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -60,7 +57,7 @@ int main() {
         memset(buffer, 0, sizeof(buffer));
         int bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
         if (bytesReceived <= 0) {
-            std::cerr << "Conexión cerrada por el servidor" << std::endl;
+            std::cerr << "Conexion cerrada por el servidor" << std::endl;
             break;
         }
 

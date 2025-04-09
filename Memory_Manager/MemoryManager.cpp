@@ -1,7 +1,3 @@
-//
-// Created by alear on 21/3/2025.
-//
-
 #include "MemoryManager.h"
 #include <iostream>
 #include <cstring>
@@ -10,6 +6,7 @@
 #include <windows.h>
 #endif
 
+using namespace std;
 MemoryManager::MemoryManager(size_t sizeMB)
     : totalSize(sizeMB * 1024 * 1024),
       head(nullptr),
@@ -75,7 +72,6 @@ void MemoryManager::collectGarbage() {
 }
 
 int MemoryManager::create(size_t size, const std::string& type) {
-    std::cout << "Estado inicial de la memoria antes de CREATE:\n";
     dumpMemoryState();
 
     std::lock_guard<std::mutex> lock(mtx);
@@ -97,10 +93,15 @@ int MemoryManager::create(size_t size, const std::string& type) {
                 current->size = size;
             }
 
+
+            // Ahora almacenamos el tipo correctamente
+            current->type = type;
+
             current->free = false;
             allocations[nextId] = current;
             std::cout << "CREATE: Asignado ID " << nextId << " (Tamano: " << size << ", Tipo: " << type << ")\n";
             return nextId++;
+
         }
         current = current->next;
     }
@@ -118,8 +119,9 @@ void* MemoryManager::get(int id) {
 }
 
 
-bool MemoryManager::set(int id, const std::string& value) {
+bool MemoryManager::setInt(int id, int value) {
     std::lock_guard<std::mutex> lock(mtx);
+    std::cout << "[DEBUG] SET llamado para ID " << id << std::endl;
 
     if (allocations.find(id) == allocations.end()) {
         std::cerr << "SET: Error, ID no encontrado.\n";
@@ -127,15 +129,65 @@ bool MemoryManager::set(int id, const std::string& value) {
     }
 
     MemoryBlock* block = allocations[id];
-    if (value.size() > block->size) {
+    if (sizeof(int) > block->size) {
         std::cerr << "SET: Error, valor demasiado grande para el bloque.\n";
         return false;
     }
 
-    std::memcpy(block->address, value.c_str(), value.size() + 1); // +1 para '\0'
+    std::memcpy(block->address, &value, sizeof(int));  // <- aquí la corrección
     std::cout << "SET: Guardado en ID " << id << " -> " << value << "\n";
     return true;
 }
+
+bool MemoryManager::setDouble(int id, double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    std::cout << "[DEBUG] SET (double) llamado para ID " << id << std::endl;
+
+    if (allocations.find(id) == allocations.end()) {
+        std::cerr << "SET: Error, ID no encontrado.\n";
+        return false;
+    }
+
+    MemoryBlock* block = allocations[id];
+    if (sizeof(double) > block->size) {
+        std::cerr << "SET: Error, valor demasiado grande para el bloque.\n";
+        return false;
+    }
+
+    std::memcpy(block->address, &value, sizeof(double));
+    std::cout << "SET: Guardado en ID " << id << " -> " << value << "\n";
+    return true;
+}
+
+bool MemoryManager::setFloat(int id, float value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    std::cout << "[DEBUG] SET (float) llamado para ID " << id << std::endl;
+
+    if (allocations.find(id) == allocations.end()) {
+        std::cerr << "SET: Error, ID no encontrado.\n";
+        return false;
+    }
+
+    MemoryBlock* block = allocations[id];
+    if (sizeof(float) > block->size) {
+        std::cerr << "SET: Error, valor demasiado grande para el bloque.\n";
+        return false;
+    }
+
+    std::memcpy(block->address, &value, sizeof(float));
+    std::cout << "SET: Guardado en ID " << id << " -> " << value << "\n";
+    return true;
+}
+
+
+string MemoryManager::getType(int id) {
+    std::lock_guard<std::mutex> lock(mtx);
+    if (allocations.find(id) != allocations.end()) {
+        return allocations[id]->type;
+    }
+    return "unknown";
+}
+
 
 
 bool MemoryManager::increaseRefCount(int id) {
