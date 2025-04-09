@@ -11,6 +11,7 @@
 #include <mutex>
 #include <string>
 
+using namespace std;
 
 class MemoryManager {
 private:
@@ -31,6 +32,8 @@ public:
     int create(size_t size, const std::string& type);
     void* get(int id);
     bool set(int id,  std::string& value);
+    string getType(int id);
+
     bool increaseRefCount(int id);
     bool decreaseRefCount(int id);
     void collectGarbage();  // Nuevo metodo para el GC

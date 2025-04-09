@@ -27,14 +27,15 @@ MPointer<T> MPointer<T>::New() {
 
     if (std::is_same<T, int>::value) {
         type = "integer";
-    } else if (std::is_same<T, bool>::value) {
-        type = "boolean";
+    } else if (std::is_same<T, char>::value) {
+        type = "character";
         std::cout << sizeof(T) << std::endl;
     } else if (std::is_same<T, float>::value) {
         type = "float";
     } else if (std::is_same<T, double>::value) {
         type = "double";
-    }
+    } else throw std::runtime_error("Tipo no soportado");
+
     std::cout << "PP" << std::endl;
     int objectID = memoryManager->create(sizeof(T), type);  // Crea memoria en MemoryManager
     std::cout << "Hola" << std::endl;
@@ -46,7 +47,7 @@ template <typename T>
 MPointer<T>::~MPointer() {
     std::cout << "[DEBUG] Destructor de MPointer llamado para ID " << id << std::endl;
     if (memoryManager && id != -1) {
-        //memoryManager->decreaseRefCount(id);
+        //SmemoryManager->decreaseRefCount(id);
     }
 }
 

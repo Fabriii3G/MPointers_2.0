@@ -6,6 +6,7 @@
 #include <windows.h>
 #endif
 
+using namespace std;
 MemoryManager::MemoryManager(size_t sizeMB)
     : totalSize(sizeMB * 1024 * 1024),
       head(nullptr),
@@ -136,6 +137,15 @@ bool MemoryManager::set(int id,  std::string& value) {
     std::cout << "SET: Guardado en ID " << id << " -> " << value << "\n";
     return true;
 }
+
+string MemoryManager::getType(int id) {
+    std::lock_guard<std::mutex> lock(mtx);
+    if (allocations.find(id) != allocations.end()) {
+        return allocations[id]->type;
+    }
+    return "unknown";
+}
+
 
 
 bool MemoryManager::increaseRefCount(int id) {

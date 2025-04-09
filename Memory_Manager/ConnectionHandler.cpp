@@ -13,8 +13,10 @@
 #endif
 
 void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryManager) {
-    //  Establecer MemoryManager en MPointer antes de crear cualquier instancia
     MPointer<int>::setMemoryManager(&memoryManager);
+    MPointer<bool>::setMemoryManager(&memoryManager);
+    MPointer<float>::setMemoryManager(&memoryManager);
+    MPointer<double>::setMemoryManager(&memoryManager);
 
     char buffer[1024] = {0};
 
@@ -34,56 +36,109 @@ void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryMana
         std::string response;
 
         if (action == "CREATE") {
-            // Modificar que dependiendo el tamano y el tipo de dato se asigne un Mpointer designado
             std::string type;
             ss >> type;
+
             if (type == "INT") {
                 MPointer<int> ptr = MPointer<int>::New();
                 response = "CREATED " + std::to_string(ptr.GetID());
-            }
-            else if (type == "BOOL") {
-                MPointer<bool> ptr = MPointer<bool>::New();
+            } else if (type == "CHAR") {
+                MPointer<char> ptr = MPointer<char>::New();
                 response = "CREATED " + std::to_string(ptr.GetID());
-            }
-            else if (type == "FLOAT") {
+            } else if (type == "FLOAT") {
                 MPointer<float> ptr = MPointer<float>::New();
                 response = "CREATED " + std::to_string(ptr.GetID());
-            }
-            else if (type == "DOUBLE") {
+            } else if (type == "DOUBLE") {
                 MPointer<double> ptr = MPointer<double>::New();
                 response = "CREATED " + std::to_string(ptr.GetID());
+            } else {
+                response = "ERROR: Tipo no soportado.";
             }
+
         } else if (action == "SET") {
-            // ptr.gettype y asignar ese type a el value
-            int id, value;
+            int id;
+            std::string value;
             ss >> id >> value;
 
-            MPointer<int> ptr(id);  // Se asocia al ID existente en MemoryManager
-            *ptr = value;  // Se asigna el valor al objeto en memoria
+            std::string type = memoryManager.getType(id);
 
-            response = "SET OK";
+            if (type == "integer") {
+                try {
+                    int intValue = std::stoi(value);
+                    MPointer<int> ptr(id);
+                    *ptr = intValue;
+                    response = "SET OK";
+                } catch (...) {
+                    response = "SET ERROR: Valor inválido para tipo integer.";
+                }
+            } else if (type == "char") {
+                if (value.length() == 1) {
+                    MPointer<char> ptr(id);
+                    *ptr = value[0];
+                    response = "SET OK";
+                } else {
+                    response = "SET ERROR: Se esperaba un solo caracter para tipo char.";
+                }
+            } else if (type == "float") {
+                try {
+                    float floatValue = std::stof(value);
+                    MPointer<float> ptr(id);
+                    *ptr = floatValue;
+                    response = "SET OK";
+                } catch (...) {
+                    response = "SET ERROR: Valor inválido para tipo float.";
+                }
+            } else if (type == "double") {
+                try {
+                    double doubleValue = std::stod(value);
+                    MPointer<double> ptr(id);
+                    *ptr = doubleValue;
+                    response = "SET OK";
+                } catch (...) {
+                    response = "SET ERROR: Valor inválido para tipo double.";
+                }
+            } else {
+                response = "SET ERROR: Tipo no soportado.";
+            }
 
         } else if (action == "GET") {
             int id;
             ss >> id;
 
-            MPointer<int> ptr(id);  // Obtener el MPointer con el ID
-            response = "VALUE " + std::to_string(*ptr);
+            std::string type = memoryManager.getType(id);
+
+            try {
+                if (type == "integer") {
+                    MPointer<int> ptr(id);
+                    response = "VALUE " + std::to_string(*ptr);
+                } else if (type == "character") {
+                    MPointer<char> ptr(id);
+                    response = std::string("VALUE ") + (*ptr ? "true" : "false");
+                } else if (type == "float") {
+                    MPointer<float> ptr(id);
+                    response = "VALUE " + std::to_string(*ptr);
+                } else if (type == "double") {
+                    MPointer<double> ptr(id);
+                    response = "VALUE " + std::to_string(*ptr);
+                } else {
+                    response = "GET ERROR: Tipo no compatible o desconocido.";
+                }
+            } catch (const std::exception& e) {
+                response = std::string("GET ERROR: ") + e.what();
+            }
 
         } else if (action == "INCREF") {
             int id;
             ss >> id;
 
-            MPointer<int> ptr();
-            response = "INCREF OK";  // El constructor ya incrementa la referencia
+            memoryManager.increaseRefCount(id);
+            response = "INCREF OK";
 
         } else if (action == "DECREF") {
             int id;
             ss >> id;
 
-            MPointer<int> ptr();
-            //ptr = nullptr;  // Libera referencia
-
+            memoryManager.decreaseRefCount(id);
             response = "DECREF OK";
 
         } else {
