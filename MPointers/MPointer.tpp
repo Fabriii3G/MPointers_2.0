@@ -1,7 +1,22 @@
 #ifndef MPOINTER_TPP
 #define MPOINTER_TPP
-
+#include <iostream>
+#include <cstring>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include "MPointer.h"
+#include "../Memory_Manager/SocketClient.h"
+
+template <typename T>
+SocketClient* MPointer<T>::socketClient = nullptr;
+
+template<typename T>
+void MPointer<T>::Init(int port) {
+    if (!socketClient) {
+        socketClient = new SocketClient("127.0.0.1", port);
+    }
+}
+
 
 // Constructor privado: Se usa solo dentro de New()
 template <typename T>
@@ -24,23 +39,22 @@ void MPointer<T>::setMemoryManager(MemoryManager* manager) {
 template <typename T>
 MPointer<T> MPointer<T>::New() {
     std::string type;
+    if (std::is_same<T, int>::value) type = "INT";
+    else if (std::is_same<T, char>::value) type = "CHAR";
+    else if (std::is_same<T, float>::value) type = "FLOAT";
+    else if (std::is_same<T, double>::value) type = "DOUBLE";
+    else throw std::runtime_error("Tipo no soportado");
 
-    if (std::is_same<T, int>::value) {
-        type = "integer";
-    } else if (std::is_same<T, char>::value) {
-        type = "character";
-        std::cout << sizeof(T) << std::endl;
-    } else if (std::is_same<T, float>::value) {
-        type = "float";
-    } else if (std::is_same<T, double>::value) {
-        type = "double";
-    } else throw std::runtime_error("Tipo no soportado");
-
-    std::cout << "PP" << std::endl;
-    int objectID = memoryManager->create(sizeof(T), type);  // Crea memoria en MemoryManager
-    std::cout << "Hola" << std::endl;
-    return MPointer<T>(objectID);  // Devuelve un MPointer asociado al ID
+    std::string command = "CREATE " + type;
+    std::string response = socketClient->sendCommand(command); // Implementa esta clase
+    if (response.find("CREATED") == 0) {
+        int id = std::stoi(response.substr(8));
+        return MPointer<T>(id);
+    } else {
+        throw std::runtime_error("Error al crear objeto: " + response);
+    }
 }
+
 
 // Destructor: Libera referencia en MemoryManager
 template <typename T>

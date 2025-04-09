@@ -2,10 +2,11 @@
 #define MPOINTER_H
 
 #include "../Memory_Manager/MemoryManager.h"
-
+#include "../Memory_Manager/SocketClient.h"
 template <typename T>
 class MPointer {
 private:
+    static SocketClient* socketClient;
     T* ptr;  // Puntero al tipo T
     int id;  // ID en el MemoryManager
     static MemoryManager* memoryManager;  // Referencia al MemoryManager
@@ -13,6 +14,7 @@ private:
 
 
 public:
+    static void Init(int port);
     static void setMemoryManager(MemoryManager* manager);  // Inicializa MemoryManager
     static MPointer<T> New();  // Crea un nuevo MPointer
     MPointer(int id);  // Constructor privado que recibe un ID
