@@ -1,17 +1,14 @@
 //
 // Created by alear on 20/3/2025.
 //
-#include "Server.h"
+#include "MemoryManager.h"
 #include <iostream>
 
 int main() {
-    std::cout << "Servidor en ejecucion..." << std::endl;
+    std::cout << "[MAIN] Iniciando MemoryManager con servidor...\n";
 
-    // Crear una instancia del servidor en el puerto 6060
-    Server server(6060, 70);
-
-    // Iniciar el servidor
-    server.start();
+    MemoryManager mm(70); // 70MB
+    mm.startServer(6060);
 
     return 0;
 }

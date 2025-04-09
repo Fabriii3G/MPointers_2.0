@@ -5,6 +5,12 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include <sstream>
+#include <string>
+
+#include <unordered_map>
+#include "MemoryBlock.h"
+
 
 using namespace std;
 MemoryManager::MemoryManager(size_t sizeMB)
@@ -118,6 +124,13 @@ void* MemoryManager::get(int id) {
     return nullptr;
 }
 
+bool MemoryManager::set(int id, const std::string& type, void* value) {
+    if (type == "int") return setInt(id, *static_cast<int*>(value));
+    if (type == "float") return setFloat(id, *static_cast<float*>(value));
+    if (type == "double") return setDouble(id, *static_cast<double*>(value));
+
+    return false;
+}
 
 bool MemoryManager::setInt(int id, int value) {
     std::lock_guard<std::mutex> lock(mtx);
@@ -188,8 +201,6 @@ string MemoryManager::getType(int id) {
     return "unknown";
 }
 
-
-
 bool MemoryManager::increaseRefCount(int id) {
     std::lock_guard<std::mutex> lock(mtx);
 
@@ -238,3 +249,156 @@ void MemoryManager::dumpMemoryState() {
         current = current->next;
     }
 }
+
+size_t MemoryManager::getTypeSize(const std::string& type) {
+    if (type == "int") return sizeof(int);
+    if (type == "float") return sizeof(float);
+    if (type == "double") return sizeof(double);
+    if (type == "bool") return sizeof(bool);
+    if (type == "char") return sizeof(char);
+    return 0; // Tipo desconocido
+}
+
+void MemoryManager::startServer(int port) {
+#ifdef _WIN32
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cerr << "Error al inicializar Winsock" << std::endl;
+        return;
+    }
+#endif
+
+    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocket == -1) {
+        std::cerr << "Error al crear el socket del servidor\n";
+        return;
+    }
+
+    sockaddr_in serverAddr{};
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+    serverAddr.sin_port = htons(port);
+
+    if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+        std::cerr << "Error al enlazar el socket\n";
+        return;
+    }
+
+    if (listen(serverSocket, 1) < 0) {
+        std::cerr << "Error al escuchar conexiones\n";
+        return;
+    }
+
+    std::cout << "Servidor escuchando en el puerto " << port << std::endl;
+
+    sockaddr_in clientAddr{};
+    socklen_t clientLen = sizeof(clientAddr);
+    int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientLen);
+    if (clientSocket < 0) {
+        std::cerr << "Error al aceptar conexión\n";
+        return;
+    }
+
+    std::cout << "Cliente conectado\n";
+
+    char buffer[1024];
+    while (true) {
+        memset(buffer, 0, sizeof(buffer));
+        int bytesRead = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+        if (bytesRead <= 0) {
+            std::cout << "Cliente desconectado\n";
+            break;
+        }
+
+        std::string command(buffer);
+        std::istringstream ss(command);
+        std::string action;
+        ss >> action;
+
+        std::string response;
+
+        if (action == "CREATE") {
+            std::string type;
+            ss >> type;
+            size_t size = getTypeSize(type);
+            int id = create(size, type);
+            response = (id != -1) ? "CREATED " + std::to_string(id) : "ERROR No memory";
+        }
+        else if (action == "SET") {
+            int id;
+            std::string value;
+            ss >> id >> value;
+            //response = set(id, type, value) ? "SET OK" : "ERROR SET failed";
+        }
+        else if (action == "GET") {
+            int id;
+            ss >> id;
+            //response = "VALUE " + get(id);
+        }
+        else if (action == "INCREF") {
+            int id;
+            ss >> id;
+            response = increaseRefCount(id) ? "INCREF OK" : "ERROR ID not found";
+        }
+        else if (action == "DECREF") {
+            int id;
+            ss >> id;
+            response = decreaseRefCount(id) ? "DECREF OK" : "ERROR ID not found";
+        }
+        else {
+            response = "ERROR Unknown command";
+        }
+
+        send(clientSocket, response.c_str(), response.size(), 0);
+    }
+
+#ifdef _WIN32
+    closesocket(clientSocket);
+    closesocket(serverSocket);
+    WSACleanup();
+#else
+    close(clientSocket);
+    close(serverSocket);
+#endif
+}
+
+
+void MemoryManager::acceptConnections() {
+    struct sockaddr_in clientAddr;
+    socklen_t clientLen = sizeof(clientAddr);
+
+    while (true) {
+        int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientLen);
+        if (clientSocket < 0) {
+            perror("Error al aceptar conexión");
+            continue;
+        }
+
+        std::cout << "[MemoryManager] Cliente conectado" << std::endl;
+        clientThreads.emplace_back(&MemoryManager::handleClient, clientSocket);
+    }
+}
+
+void MemoryManager::handleClient(int clientSocket) {
+    char buffer[1024] = {0};
+
+    while (true) {
+        ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+        if (bytesRead <= 0) {
+            std::cout << "[MemoryManager] Cliente desconectado" << std::endl;
+            break;
+        }
+
+        buffer[bytesRead] = '\0';
+        std::string response = std::string("ECHO: ") + buffer;
+
+        send(clientSocket, response.c_str(), response.size(), 0);
+    }
+
+#ifdef _WIN32
+    closesocket(clientSocket);
+#else
+    close(clientSocket);
+#endif
+}
+

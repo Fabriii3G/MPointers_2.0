@@ -1,8 +1,8 @@
 //
 // Created by alear on 18/3/2025.
 //
+/*
 #include "Server.h"
-#include "ConnectionHandler.h"
 #include <iostream>
 
 Server::Server(int port, size_t memorySize) : port(port), memoryManager(memorySize) {
@@ -62,7 +62,7 @@ void Server::acceptConnections() {
         }
 
         std::cout << "Cliente conectado" << std::endl;
-        clientThreads.emplace_back(&ConnectionHandler::handleClient, clientSocket, std::ref(memoryManager));
+
     }
 }
 
@@ -74,3 +74,4 @@ void Server::start() {
 MemoryManager& Server::getMemoryManager() {
     return memoryManager;
 }
+*/
