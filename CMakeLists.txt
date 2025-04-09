@@ -10,6 +10,8 @@ add_executable(Server
         "Memory_Manager/Server.cpp"
         "Memory_Manager/MemoryManager.cpp"
         "Memory_Manager/GarbageCollector.cpp"
+        "Memory_Manager/SocketClient.cpp"
+        "Memory_Manager/SocketClient.h"
 )
 
 #Enlaza la biblioteca ws2_32 (necesaria para sockets en Windows)
@@ -21,7 +23,9 @@ add_executable(Client
         MPointers/MPointer.tpp
         MPointers/Mpointer.h
         List/LinkedList.tpp
+        Memory_Manager/SocketClient.cpp
+        Memory_Manager/SocketClient.h
 )
-# Enlaza la biblioteca ws2_32 (necesaria para sockets en Windows)
+#Enlaza la biblioteca ws2_32 (necesaria para sockets en Windows)
 target_link_libraries(Client ws2_32)
 include_directories(${CMAKE_SOURCE_DIR}/MPointers)
