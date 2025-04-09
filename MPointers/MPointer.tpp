@@ -54,6 +54,16 @@ MPointer<T>::~MPointer() {
 // Sobrecarga del operador * (Acceso a datos)
 template <typename T>
 T& MPointer<T>::operator*() {
+    if (std::is_same<T, int>::value) {
+        memoryManager->setInt(id, *ptr);
+    } else if (std::is_same<T, char>::value) {
+        //memoryManager->setFloat(id, *ptr);
+        std::cout << sizeof(T) << std::endl;
+    } else if (std::is_same<T, float>::value) {
+        memoryManager->setFloat(id, *ptr);
+    } else if (std::is_same<T, double>::value) {
+        memoryManager->setDouble(id, *ptr);
+    } else throw std::runtime_error("Tipo no soportado");
 
     //memoryManager->set(id, std::to_string(*ptr));
     return *ptr;

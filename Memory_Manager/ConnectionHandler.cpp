@@ -68,8 +68,9 @@ void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryMana
                     MPointer<int> ptr(id);
                     *ptr = intValue;
                     response = "SET OK";
+                    *ptr = intValue;
                 } catch (...) {
-                    response = "SET ERROR: Valor inválido para tipo integer.";
+                    response = "SET ERROR: Valor invalido para tipo integer.";
                 }
             } else if (type == "char") {
                 if (value.length() == 1) {
@@ -85,8 +86,9 @@ void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryMana
                     MPointer<float> ptr(id);
                     *ptr = floatValue;
                     response = "SET OK";
+                    *ptr = floatValue;
                 } catch (...) {
-                    response = "SET ERROR: Valor inválido para tipo float.";
+                    response = "SET ERROR: Valor invalido para tipo float.";
                 }
             } else if (type == "double") {
                 try {
@@ -94,8 +96,9 @@ void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryMana
                     MPointer<double> ptr(id);
                     *ptr = doubleValue;
                     response = "SET OK";
+                    *ptr = doubleValue;
                 } catch (...) {
-                    response = "SET ERROR: Valor inválido para tipo double.";
+                    response = "SET ERROR: Valor invalido para tipo double.";
                 }
             } else {
                 response = "SET ERROR: Tipo no soportado.";
@@ -110,6 +113,7 @@ void ConnectionHandler::handleClient(int clientSocket, MemoryManager& memoryMana
             try {
                 if (type == "integer") {
                     MPointer<int> ptr(id);
+                    std::cout << id << std::endl;
                     response = "VALUE " + std::to_string(*ptr);
                 } else if (type == "character") {
                     MPointer<char> ptr(id);
