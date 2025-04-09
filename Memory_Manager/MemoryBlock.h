@@ -7,7 +7,7 @@
 // Estructura para representar un bloque de memoria dentro del Memory Manager
 struct MemoryBlock {
     void* address;    // Dirección del bloque dentro del espacio reservado
-    size_t size;      // Tamaño del bloque en bytes
+    int size;      // Tamaño del bloque en bytes
     int refCount;     // Contador de referencias
     bool free;        // Indica si el bloque está libre
     MemoryBlock* next; // Apunta al siguiente bloque en la lista enlazada

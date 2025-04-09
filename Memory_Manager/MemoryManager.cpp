@@ -77,9 +77,8 @@ void MemoryManager::collectGarbage() {
     }
 }
 
-int MemoryManager::create(size_t size, const std::string& type) {
+int MemoryManager::create(int size, const std::string& type) {
     dumpMemoryState();
-
     std::lock_guard<std::mutex> lock(mtx);
     MemoryBlock* current = head;
 
@@ -96,16 +95,26 @@ int MemoryManager::create(size_t size, const std::string& type) {
                 newBlock->free = true;
                 newBlock->next = current->next;
                 current->next = newBlock;
-                current->size = size;
+                if (type == "INT") {
+                    current->size  = sizeof(int);
+                } else if (type == "DOUBLE") {
+                    current->size = sizeof(double);
+                } else if (type == "FLOAT") {
+                    current->size = sizeof(float);
+                } else {
+                    current->size = sizeof(char);
+                }
             }
 
 
             // Ahora almacenamos el tipo correctamente
             current->type = type;
 
+
+
             current->free = false;
             allocations[nextId] = current;
-            std::cout << "CREATE: Asignado ID " << nextId << " (Tamano: " << size << ", Tipo: " << type << ")\n";
+            std::cout << "CREATE: Asignado ID " << nextId << " (Tamano: " << current->size << ", Tipo: " << type << ")\n";
             return nextId++;
 
         }
@@ -318,6 +327,7 @@ void MemoryManager::startServer(int port) {
         std::string response;
 
         if (action == "CREATE") {
+            cout << "Dod";
             std::string type;
             ss >> type;
             size_t size = getTypeSize(type);
@@ -325,10 +335,11 @@ void MemoryManager::startServer(int port) {
             response = (id != -1) ? "CREATED " + std::to_string(id) : "ERROR No memory";
         }
         else if (action == "SET") {
+            cout << "Prueba";
             int id;
-            std::string value;
+            int value;
             ss >> id >> value;
-            //response = set(id, type, value) ? "SET OK" : "ERROR SET failed";
+            response = setInt(id, value) ? "SET OK" : "ERROR SET failed";
         }
         else if (action == "GET") {
             int id;

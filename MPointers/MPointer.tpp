@@ -68,8 +68,14 @@ MPointer<T>::~MPointer() {
 // Sobrecarga del operador * (Acceso a datos)
 template <typename T>
 T& MPointer<T>::operator*() {
+    cout << "[DEBUG] Set* llamado para ID " << id << endl;
     if (std::is_same<T, int>::value) {
-        memoryManager->setInt(id, *ptr);
+        std::string command = "SET " + 12 ;
+        cout << "df";
+        std::string response = socketClient->sendCommand(command); // Implementa esta clase
+        cout << response;
+        //memoryManager->setInt(id, *ptr);
+        std::cout << "prueba" << std::endl;
     } else if (std::is_same<T, char>::value) {
         //memoryManager->setFloat(id, *ptr);
         std::cout << sizeof(T) << std::endl;

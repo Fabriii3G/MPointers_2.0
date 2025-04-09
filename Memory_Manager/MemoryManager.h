@@ -51,7 +51,7 @@ public:
     void startServer(int port);
     size_t getTypeSize(const std::string& type);
 
-    int create(size_t size, const std::string& type);
+    int create(int size, const std::string& type);
     void* get(int id);
     bool set(int id, const std::string& type, void* value);
     bool setInt(int id,  int value);
