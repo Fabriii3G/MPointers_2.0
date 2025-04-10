@@ -14,7 +14,8 @@ int main() {
     MPointer<int> ptr1 = MPointer<int>::New();
     MPointer<int> ptr2 = MPointer<int>::New();
     *ptr = 122323;
-    *ptr1 = 123123;
     *ptr2 = 123456;
+    ptr1 = ptr;
+
     return 0;
 }

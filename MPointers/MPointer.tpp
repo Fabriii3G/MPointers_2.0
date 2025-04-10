@@ -5,6 +5,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include "MPointer.h"
+#include "../List/LinkedList.tpp"
 #include "../Memory_Manager/SocketClient.h"
 
 
@@ -45,6 +46,7 @@ MPointer<T> MPointer<T>::New() {
     else if (std::is_same<T, char>::value) type = "CHAR";
     else if (std::is_same<T, float>::value) type = "FLOAT";
     else if (std::is_same<T, double>::value) type = "DOUBLE";
+    else if (std::is_same<T, Node<int>>::value) type = "NODE";
     else throw std::runtime_error("Tipo no soportado");
 
     std::string command = "CREATE " + type;
@@ -85,17 +87,13 @@ T* MPointer<T>::operator&() {
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(const MPointer<T>& other) {
     std::cout << "[DEBUG] Operador = llamado: " << id << " -> " << other.id << std::endl;
-    if (this != &other) {
-        if (memoryManager) {
-            std::string command1 = "INCREF " + other.id;
-            std::string response1 = socketClient->sendCommand(command1); // Implementa esta clase
-            std::string command2 = "DECREF " + id;
-            std::string response2 = socketClient->sendCommand(command2); // Implementa esta clase
-
-        }
-        id = other.id;
-        ptr = other.ptr;
-    }
+    std::string command1 = "INCREF " + std::to_string(other.id);
+    std::cout << "Comando 1: " << command1 << std::endl;
+    std::string response1 = socketClient->sendCommand(command1); // Implementa esta clase
+    std::string command2 = "DECREF " + std::to_string(id);
+    std::cout << "Comando 2: " << command2 << std::endl;
+    std::string response2 = socketClient->sendCommand(command2); // Implementa esta clase
+    id = other.id;
     return *this;
 }
 
@@ -119,10 +117,8 @@ MPointer<T>& MPointer<T>::operator=(const T& value) {
 // Asignacion de nullptr (Libera la memoria) (Revisar si sirve)
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(std::nullptr_t) {
-    if (memoryManager) {
-        std::string command = "DECREF " + id;
-        std::string response = socketClient->sendCommand(command); // Implementa esta clase
-    }
+    std::string command = "DECREF " + id;
+    std::string response = socketClient->sendCommand(command);
     ptr = nullptr;
     id = -1;
     return *this;
@@ -139,9 +135,8 @@ template <typename T>
 MPointer<T>::MPointer(const MPointer<T>& other) {
     id = other.id;
     ptr = other.ptr;
-    if (memoryManager) {
-        memoryManager->increaseRefCount(id);
-    }
+    std::string command = "INCREF " + id;
+    std::string response = socketClient->sendCommand(command);
 }
 
 #endif // MPOINTER_TPP
