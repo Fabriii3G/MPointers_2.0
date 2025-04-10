@@ -64,7 +64,8 @@ template <typename T>
 MPointer<T>::~MPointer() {
     std::cout << "[DEBUG] Destructor de MPointer llamado para ID " << id << std::endl;
     if (memoryManager && id != -1) {
-        //SmemoryManager->decreaseRefCount(id);
+        std::string command = "DECREF " + id;
+        std::string response = socketClient->sendCommand(command); // Implementa esta clase
     }
 }
 
@@ -86,8 +87,11 @@ MPointer<T>& MPointer<T>::operator=(const MPointer<T>& other) {
     std::cout << "[DEBUG] Operador = llamado: " << id << " -> " << other.id << std::endl;
     if (this != &other) {
         if (memoryManager) {
-            memoryManager->increaseRefCount(other.id);
-            memoryManager->decreaseRefCount(id);
+            std::string command1 = "INCREF " + other.id;
+            std::string response1 = socketClient->sendCommand(command1); // Implementa esta clase
+            std::string command2 = "DECREF " + id;
+            std::string response2 = socketClient->sendCommand(command2); // Implementa esta clase
+
         }
         id = other.id;
         ptr = other.ptr;
@@ -95,7 +99,7 @@ MPointer<T>& MPointer<T>::operator=(const MPointer<T>& other) {
     return *this;
 }
 
-// Asignaci贸n de un valor directamente a MPointer
+// Asignaci贸n de un valor directamente a MPointer (Revisar si sirve)
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(const T& value) {
     if (ptr) {
@@ -104,11 +108,12 @@ MPointer<T>& MPointer<T>::operator=(const T& value) {
     return *this;
 }
 
-// Asignaci贸n de nullptr (Libera la memoria)
+// Asignaci贸n de nullptr (Libera la memoria) (Revisar si sirve)
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(std::nullptr_t) {
     if (memoryManager) {
-        memoryManager->decreaseRefCount(id);
+        std::string command = "DECREF " + id;
+        std::string response = socketClient->sendCommand(command); // Implementa esta clase
     }
     ptr = nullptr;
     id = -1;
@@ -121,7 +126,7 @@ int MPointer<T>::GetID() const {
     return id;
 }
 
-// Constructor de copia
+// Constructor de copia (Revisar si sirve)
 template <typename T>
 MPointer<T>::MPointer(const MPointer<T>& other) {
     id = other.id;
