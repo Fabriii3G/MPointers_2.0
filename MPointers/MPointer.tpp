@@ -70,18 +70,18 @@ MPointer<T>::~MPointer() {
 }
 
 template <typename T>
-MPointerReference<T> MPointer<T>::operator*() {
-    return MPointerReference<T>(*this);
+MPointer<T>& MPointer<T>::operator*() {
+    return *this;
 }
 
 
-// Sobrecarga del operador & (Devuelve la direcci贸n de memoria)
+// Sobrecarga del operador & (Devuelve la direccion de memoria)
 template <typename T>
 T* MPointer<T>::operator&() {
     return ptr;
 }
 
-// Asignaci贸n de un MPointer a otro
+// Asignacion de un MPointer a otro
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(const MPointer<T>& other) {
     std::cout << "[DEBUG] Operador = llamado: " << id << " -> " << other.id << std::endl;
@@ -99,16 +99,24 @@ MPointer<T>& MPointer<T>::operator=(const MPointer<T>& other) {
     return *this;
 }
 
-// Asignaci贸n de un valor directamente a MPointer (Revisar si sirve)
+// Asignacion de un valor directamente a MPointer
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(const T& value) {
-    if (ptr) {
-        *ptr = value;
+    std::string command = "SET " + std::to_string(this->id) + " " + std::to_string(value);
+    std::string response = socketClient->sendCommand(command);
+
+    if (response.find("SET OK") == 0) {
+        std::cout << "[MPointer] Valor asignado exitosamente: " << value << std::endl;
+        //*this->ptr = value;
+    } else {
+         std::cerr << "[ERROR] Falló el comando SET: " << response << std::endl;
     }
+
     return *this;
 }
 
-// Asignaci贸n de nullptr (Libera la memoria) (Revisar si sirve)
+
+// Asignacion de nullptr (Libera la memoria) (Revisar si sirve)
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(std::nullptr_t) {
     if (memoryManager) {

@@ -78,6 +78,7 @@ void MemoryManager::collectGarbage() {
 }
 
 int MemoryManager::create(int size, const std::string& type) {
+    cout << size;
     dumpMemoryState();
     std::lock_guard<std::mutex> lock(mtx);
     MemoryBlock* current = head;
@@ -114,7 +115,7 @@ int MemoryManager::create(int size, const std::string& type) {
 
             current->free = false;
             allocations[nextId] = current;
-            std::cout << "CREATE: Asignado ID " << nextId << " (Tamano: " << current->size << ", Tipo: " << type << ")\n";
+            std::cout << "CREATE: Asignado ID " << nextId << " (Tamano: " << current->size << ", Tipo: " << type << ", Direccion: " << current->address << ")\n";
             return nextId++;
 
         }
@@ -260,11 +261,11 @@ void MemoryManager::dumpMemoryState() {
 }
 
 size_t MemoryManager::getTypeSize(const std::string& type) {
-    if (type == "int") return sizeof(int);
-    if (type == "float") return sizeof(float);
-    if (type == "double") return sizeof(double);
-    if (type == "bool") return sizeof(bool);
-    if (type == "char") return sizeof(char);
+    if (type == "INT") return sizeof(int);
+    if (type == "FLOAT") return sizeof(float);
+    if (type == "DOUBLE") return sizeof(double);
+    if (type == "BOOL") return sizeof(bool);
+    if (type == "CHAR") return sizeof(char);
     return 0; // Tipo desconocido
 }
 
@@ -331,6 +332,7 @@ void MemoryManager::startServer(int port) {
             std::string type;
             ss >> type;
             size_t size = getTypeSize(type);
+
             int id = create(size, type);
             response = (id != -1) ? "CREATED " + std::to_string(id) : "ERROR No memory";
         }
@@ -339,7 +341,7 @@ void MemoryManager::startServer(int port) {
             int id;
             int value;
             ss >> id >> value;
-            response = setInt(id, value) ? "SET OK" : "ERROR SET failed";
+            response = setInt(id, value) ? "SET OK " : "ERROR SET failed";
         }
         else if (action == "GET") {
             int id;

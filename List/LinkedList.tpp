@@ -3,12 +3,12 @@
 
 #include <cstddef>
 #include <iostream>
-#include "C:\Users\XPC\OneDrive - Estudiantes ITCR\Escritorio\Proyecto 1\MPointers_2.0\MPointers\MPointer.tpp"
+#include "..\MPointers\MPointer.h"
 
 template <typename T>
 struct Node {
     T data;
-    Mpointer<Node<T>> next;
+    MPointer<Node<T>> next;
 
     Node(const T& value) : data(value), next(nullptr) {}
 };
@@ -16,13 +16,13 @@ struct Node {
 template <typename T>
 class LinkedList {
 private:
-    Mpointer<Node<T>> head;
+    MPointer<Node<T>> head;
     size_t size;
 public:
     LinkedList() : head(nullptr), size(0) {}
 
     void append(const T& value) {
-         Mpointer<Node<T>> newNode = new Node<T>(value);
+         MPointer<Node<T>> newNode = new Node<T>(value);
         if (!head) {
             head = newNode;
         } else {
@@ -56,10 +56,10 @@ public:
 
 
     size_t getSize() const { return size; }
-    Mpointer<Node<T>> getHead() const { return head; }
+    MPointer<Node<T>> getHead() const { return head; }
 
     void print() const {
-         Mpointer<Node<T>> current = head;
+         MPointer<Node<T>> current = head;
         while (current) {
             std::cout << current->data << " ";
             current = current->next;
