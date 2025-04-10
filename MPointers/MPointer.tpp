@@ -7,6 +7,8 @@
 #include "MPointer.h"
 #include "../Memory_Manager/SocketClient.h"
 
+
+
 template <typename T>
 SocketClient* MPointer<T>::socketClient = nullptr;
 
@@ -26,7 +28,7 @@ MPointer<T>::MPointer(int objectID) : id(objectID) {
     } else {
         ptr = nullptr;
     }
-    std::cout << "[DEBUG] MPointer creado con ID " << id << " en direccion " << ptr << std::endl;
+    std::cout << "[DEBUG] MPointer creado con ID " << id << std::endl;
 }
 
 // Metodo para inicializar el MemoryManager antes de usar MPointer
@@ -47,6 +49,7 @@ MPointer<T> MPointer<T>::New() {
 
     std::string command = "CREATE " + type;
     std::string response = socketClient->sendCommand(command); // Implementa esta clase
+    cout << command;
     if (response.find("CREATED") == 0) {
         int id = std::stoi(response.substr(8));
         return MPointer<T>(id);
@@ -65,29 +68,11 @@ MPointer<T>::~MPointer() {
     }
 }
 
-// Sobrecarga del operador * (Acceso a datos)
 template <typename T>
-T& MPointer<T>::operator*() {
-    cout << "[DEBUG] Set* llamado para ID " << id << endl;
-    if (std::is_same<T, int>::value) {
-        std::string command = "SET " + 12 ;
-        cout << "df";
-        std::string response = socketClient->sendCommand(command); // Implementa esta clase
-        cout << response;
-        //memoryManager->setInt(id, *ptr);
-        std::cout << "prueba" << std::endl;
-    } else if (std::is_same<T, char>::value) {
-        //memoryManager->setFloat(id, *ptr);
-        std::cout << sizeof(T) << std::endl;
-    } else if (std::is_same<T, float>::value) {
-        memoryManager->setFloat(id, *ptr);
-    } else if (std::is_same<T, double>::value) {
-        memoryManager->setDouble(id, *ptr);
-    } else throw std::runtime_error("Tipo no soportado");
-
-    //memoryManager->set(id, std::to_string(*ptr));
-    return *ptr;
+MPointerReference<T> MPointer<T>::operator*() {
+    return MPointerReference<T>(*this);
 }
+
 
 // Sobrecarga del operador & (Devuelve la direcci贸n de memoria)
 template <typename T>

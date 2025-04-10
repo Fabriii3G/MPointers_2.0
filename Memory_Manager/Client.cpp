@@ -10,11 +10,9 @@
 int main() {
     MPointer<int>::Init(6060);
     MPointer<int> ptr = MPointer<int>::New();
-    cout<< "dd";
-    MPointer<int> ptrDouble = MPointer<int>::New();
-    *ptr = 123;
-    cout<< "dd";
-    //MPointer<int> ptrDouble = MPointer<int>::New();
-    //*ptrDouble = 12433232323;
+    *ptr = 122323;
+    MPointer<double> ptrDouble = MPointer<double>::New();
+    MPointer<float> ptrFloat = MPointer<float>::New();
+
     return 0;
 }
