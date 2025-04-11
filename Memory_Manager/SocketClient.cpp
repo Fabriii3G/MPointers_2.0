@@ -25,7 +25,7 @@ SocketClient::SocketClient(const std::string& ip, int port) {
         throw std::runtime_error("Connection to server failed");
     }
 
-    std::cout << "[DEBUG] Conectado al servidor en " << ip << ":" << port << std::endl;
+    std::cout << "Conectado al servidor en " << ip << ":" << port << std::endl;
 }
 
 SocketClient::~SocketClient() {
@@ -40,11 +40,9 @@ SocketClient::~SocketClient() {
 std::string SocketClient::sendCommand(const std::string& command) {
     std::string cmdWithNewline = command + "\n";
     send(sock, cmdWithNewline.c_str(), cmdWithNewline.size(), 0);
-    std::cout << "[DEBUG] Enviando comando: " << command << std::endl;
 
     char buffer[1024] = {0};
     ssize_t bytesRead = recv(sock, buffer, sizeof(buffer) - 1, 0);
-    std::cout << "[DEBUG] Respuesta del servidor: " << recv << std::endl;
 
     if (bytesRead <= 0) {
         throw std::runtime_error("Disconnected or failed to read response");

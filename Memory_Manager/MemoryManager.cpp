@@ -89,10 +89,8 @@ void MemoryManager::collectGarbage() {
     std::unique_lock<std::mutex> lock(mtx, std::try_to_lock);
     if (!lock.owns_lock()) {
         std::cout << "[GC] Memoria en uso. Saltando recoleccion.\n";
-        return;  // Evita deadlock si otro hilo ya tiene el lock
+        return;
     }
-
-    std::cout << "[GC] Iniciando recoleccion de basura...\n";
 
     MemoryBlock* current = head;
     while (current) {
@@ -103,13 +101,11 @@ void MemoryManager::collectGarbage() {
         current = current->next;
     }
 
-    std::cout << "[GC] Recoleccion finalizada.\n";
 }
 
 
 
 int MemoryManager::create(int size, const std::string& type) {
-    cout << size;
     std::lock_guard<std::mutex> lock(mtx);
     MemoryBlock* current = head;
 
@@ -132,8 +128,6 @@ int MemoryManager::create(int size, const std::string& type) {
                     current->size = sizeof(double);
                 } else if (type == "FLOAT") {
                     current->size = sizeof(float);
-                } else {
-                    current->size = sizeof(char);
                 }
             }
 
@@ -165,17 +159,9 @@ void* MemoryManager::get(int id) {
     return nullptr;
 }
 
-bool MemoryManager::set(int id, const std::string& type, void* value) {
-    if (type == "int") return setInt(id, *static_cast<int*>(value));
-    if (type == "float") return setFloat(id, *static_cast<float*>(value));
-    if (type == "double") return setDouble(id, *static_cast<double*>(value));
-
-    return false;
-}
 
 bool MemoryManager::setInt(int id, int value) {
     std::lock_guard<std::mutex> lock(mtx);
-    std::cout << "[DEBUG] SET (int) llamado para ID " << id << std::endl;
 
     if (allocations.find(id) == allocations.end()) {
         std::cerr << "SET: Error, ID no encontrado.\n";
@@ -197,7 +183,6 @@ bool MemoryManager::setInt(int id, int value) {
 
 bool MemoryManager::setDouble(int id, double value) {
     std::lock_guard<std::mutex> lock(mtx);
-    std::cout << "[DEBUG] SET (double) llamado para ID " << id << std::endl;
 
     if (allocations.find(id) == allocations.end()) {
         std::cerr << "SET: Error, ID no encontrado.\n";
@@ -221,7 +206,6 @@ bool MemoryManager::setDouble(int id, double value) {
 
 bool MemoryManager::setFloat(int id, float value) {
     std::lock_guard<std::mutex> lock(mtx);
-    std::cout << "[DEBUG] SET (float) llamado para ID " << id << std::endl;
 
     if (allocations.find(id) == allocations.end()) {
         std::cerr << "SET: Error, ID no encontrado.\n";
@@ -342,8 +326,6 @@ size_t MemoryManager::getTypeSize(const std::string& type) {
     if (type == "INT") return sizeof(int);
     if (type == "FLOAT") return sizeof(float);
     if (type == "DOUBLE") return sizeof(double);
-    if (type == "BOOL") return sizeof(bool);
-    if (type == "CHAR") return sizeof(char);
     return 0; // Tipo desconocido
 }
 

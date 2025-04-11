@@ -1,54 +1,56 @@
+/*
 #ifndef LINKEDLIST_TPP
 #define LINKEDLIST_TPP
 
-#include <cstddef>
 #include <iostream>
-#include "..\MPointers\MPointer.tpp"
-
+//#include "..\MPointers\MPointer.tpp"
 
 struct Node {
     int data;
-    MPointer<Node> next = MPointer<Node>::New();
+    MPointer<Node> next;
 
-    Node(int value){
-        data = value;
-        next = nullptr; }
+    Node() : data(0), next() {}  // constructor por defecto con inicialización
+    Node(int value) : data(value), next() {}  // constructor con valor
 };
-
 
 class LinkedList {
 private:
-    MPointer<Node> head = MPointer<Node>::New();
+    MPointer<Node> head;
+    bool isHeadSet = false;
 
 public:
-    LinkedList(){
-        head = nullptr;
-    }
+    LinkedList() : head() {}
 
     void append(int value) {
         MPointer<Node> newNode = MPointer<Node>::New();
-        *newNode = Node(value); // Asignar el dato (data = 10)
-        if (head) {
+        *newNode = Node(value);
+
+        if (!isHeadSet) {
             head = newNode;
+            isHeadSet = true;
         } else {
             MPointer<Node> current = head;
-            while (current->next) {
+            while ((*current).next.GetID() != -1) {
                 current = (*current).next;
             }
-            current->next = newNode;
+            (*current).next = newNode;
         }
-
     }
 
-
     void print() const {
-        MPointer<Node> current = head;
-        while (current) {
-            std::cout << current->data << " ";
-            current = current->next;
+        if (!isHeadSet) {
+            std::cout << "Lista vacía.\n";
+            return;
         }
-        std::cout << std::endl;
+
+        MPointer<Node> current = head;
+        while ((*current).next.GetID() != -1) {
+            std::cout << (*current).data << " -> ";
+            current = (*current).next;
+        }
+        std::cout << (*current).data << " -> null\n";
     }
 };
 
 #endif // LINKEDLIST_TPP
+*/

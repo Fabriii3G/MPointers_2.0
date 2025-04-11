@@ -56,11 +56,9 @@ public:
 
     int create(int size, const std::string& type);
     void* get(int id);
-    bool set(int id, const std::string& type, void* value);
     bool setInt(int id,  int value);
     bool setDouble(int id, double value);
     bool setFloat(int id,  float value);
-    bool setChar(int id,  char value);
     string getType(int id);
 
     bool increaseRefCount(int id);

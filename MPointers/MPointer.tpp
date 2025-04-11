@@ -5,7 +5,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include "MPointer.h"
-#include "../List/LinkedList.tpp"
+//#include "../List/LinkedList.tpp"
 #include "../Memory_Manager/SocketClient.h"
 
 
@@ -24,7 +24,7 @@ void MPointer<T>::Init(int port) {
 // Constructor privado: Se usa solo dentro de New()
 template <typename T>
 MPointer<T>::MPointer(int objectID) : id(objectID) {
-    std::cout << "[DEBUG] MPointer creado con ID " << id << std::endl;
+    std::cout << "MPointer creado con ID " << id << std::endl;
 }
 
 // Crea un nuevo MPointer, asignando memoria en MemoryManager
@@ -32,15 +32,12 @@ template <typename T>
 MPointer<T> MPointer<T>::New() {
     std::string type;
     if (std::is_same<T, int>::value) type = "INT";
-    else if (std::is_same<T, char>::value) type = "CHAR";
     else if (std::is_same<T, float>::value) type = "FLOAT";
     else if (std::is_same<T, double>::value) type = "DOUBLE";
-    else if (std::is_same<T, Node>::value) type = "NODE";
     else throw std::runtime_error("Tipo no soportado");
 
     std::string command = "CREATE " + type;
     std::string response = socketClient->sendCommand(command); // Implementa esta clase
-    cout << command;
     if (response.find("CREATED") == 0) {
         int id = std::stoi(response.substr(8));
         return MPointer<T>(id);
@@ -53,7 +50,7 @@ MPointer<T> MPointer<T>::New() {
 // Destructor: Libera referencia en MemoryManager
 template <typename T>
 MPointer<T>::~MPointer() {
-    std::cout << "[DEBUG] Destructor de MPointer llamado para ID " << id << std::endl;
+    std::cout << "Destructor de MPointer llamado para ID " << id << std::endl;
     if (memoryManager && id != -1) {
         std::string command = "DECREF " + id;
         std::string response = socketClient->sendCommand(command); // Implementa esta clase
@@ -69,19 +66,19 @@ MPointer<T>& MPointer<T>::operator*() {
 // Sobrecarga del operador & (Devuelve la direccion de memoria)
 template <typename T>
 T* MPointer<T>::operator&() {
-    return ptr;
+    return id;
 }
 
 // Asignacion de un MPointer a otro
 template <typename T>
 MPointer<T>& MPointer<T>::operator=(const MPointer<T>& other) {
-    std::cout << "[DEBUG] Operador = llamado: " << id << " -> " << other.id << std::endl;
+    std::cout << "Operador = llamado: " << "Se copio el Id " << other.id << " al Id " << id << std::endl;
     std::string command1 = "INCREF " + std::to_string(other.id);
-    std::cout << "Comando 1: " << command1 << std::endl;
     std::string response1 = socketClient->sendCommand(command1); // Implementa esta clase
+    std::cout << response1 << " para Id: " << other.id << std::endl;
     std::string command2 = "DECREF " + std::to_string(id);
-    std::cout << "Comando 2: " << command2 << std::endl;
     std::string response2 = socketClient->sendCommand(command2); // Implementa esta clase
+    std::cout << response2 << " para Id: " << id << std::endl;
     id = other.id;
     return *this;
 }
@@ -93,10 +90,10 @@ MPointer<T>& MPointer<T>::operator=(const T& value) {
     std::string response = socketClient->sendCommand(command);
 
     if (response.find("SET OK") == 0) {
-        std::cout << "[MPointer] Valor asignado exitosamente: " << value << std::endl;
+        std::cout << "Valor asignado exitosamente: " << value << " a id: " << std::to_string(id)  << std::endl;
         //*this->ptr = value;
     } else {
-         std::cerr << "[ERROR] Falló el comando SET: " << response << std::endl;
+         std::cerr << "[ERROR] Fallo el comando SET: " << response << std::endl;
     }
 
     return *this;
