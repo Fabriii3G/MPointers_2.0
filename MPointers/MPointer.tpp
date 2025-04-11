@@ -37,7 +37,7 @@ MPointer<T> MPointer<T>::New() {
     else throw std::runtime_error("Tipo no soportado");
 
     std::string command = "CREATE " + type;
-    std::string response = socketClient->sendCommand(command); // Implementa esta clase
+    std::string response = socketClient->sendCommand(command);
     if (response.find("CREATED") == 0) {
         int id = std::stoi(response.substr(8));
         return MPointer<T>(id);
@@ -53,7 +53,7 @@ MPointer<T>::~MPointer() {
     std::cout << "Destructor de MPointer llamado para ID " << id << std::endl;
     if (memoryManager && id != -1) {
         std::string command = "DECREF " + id;
-        std::string response = socketClient->sendCommand(command); // Implementa esta clase
+        std::string response = socketClient->sendCommand(command);
     }
 }
 
@@ -74,10 +74,10 @@ template <typename T>
 MPointer<T>& MPointer<T>::operator=(const MPointer<T>& other) {
     std::cout << "Operador = llamado: " << "Se copio el Id " << other.id << " al Id " << id << std::endl;
     std::string command1 = "INCREF " + std::to_string(other.id);
-    std::string response1 = socketClient->sendCommand(command1); // Implementa esta clase
+    std::string response1 = socketClient->sendCommand(command1);
     std::cout << response1 << " para Id: " << other.id << std::endl;
     std::string command2 = "DECREF " + std::to_string(id);
-    std::string response2 = socketClient->sendCommand(command2); // Implementa esta clase
+    std::string response2 = socketClient->sendCommand(command2);
     std::cout << response2 << " para Id: " << id << std::endl;
     id = other.id;
     return *this;
