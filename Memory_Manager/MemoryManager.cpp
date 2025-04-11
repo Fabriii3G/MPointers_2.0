@@ -8,6 +8,18 @@
 #include <sstream>
 #include <string>
 
+#include <fstream>
+#include <chrono>
+#include <iomanip>
+
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
+
+
 #include <unordered_map>
 #include "MemoryBlock.h"
 
@@ -16,7 +28,14 @@ using namespace std;
 MemoryManager::MemoryManager(size_t sizeMB)
     : totalSize(sizeMB * 1024 * 1024),
       head(nullptr),
-      nextId(1) {
+      nextId(1),
+      gc(this) {
+
+#ifdef _WIN32
+    _mkdir("Dumps");
+#else
+    mkdir("Dumps", 0777);
+#endif
 
 #ifdef _WIN32
     memoryPool = VirtualAlloc(nullptr, totalSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -35,10 +54,11 @@ MemoryManager::MemoryManager(size_t sizeMB)
     std::cout << "Inicializacion: head -> Direccion: " << head->address
           << " | Tamano: " << head->size
           << " | Libre: " << (head->free ? "Si" : "No") << "\n";
-
+    gc.start();
 }
 
 MemoryManager::~MemoryManager() {
+    gc.stop();
 #ifdef _WIN32
     VirtualFree(memoryPool, 0, MEM_RELEASE);
 #else
@@ -66,20 +86,30 @@ void MemoryManager::splitBlock(MemoryBlock* block, size_t size) {
 }
 
 void MemoryManager::collectGarbage() {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::unique_lock<std::mutex> lock(mtx, std::try_to_lock);
+    if (!lock.owns_lock()) {
+        std::cout << "[GC] Memoria en uso. Saltando recoleccion.\n";
+        return;  // Evita deadlock si otro hilo ya tiene el lock
+    }
+
+    std::cout << "[GC] Iniciando recoleccion de basura...\n";
+
     MemoryBlock* current = head;
     while (current) {
         if (current->refCount == 0 && !current->free) {
-            std::cout << "Liberando bloque en " << current->address << " (Tamaño: " << current->size << ")\n";
+            std::cout << "Liberando bloque en " << current->address << " (Tamano: " << current->size << ")\n";
             current->free = true;
         }
         current = current->next;
     }
+
+    std::cout << "[GC] Recoleccion finalizada.\n";
 }
+
+
 
 int MemoryManager::create(int size, const std::string& type) {
     cout << size;
-    dumpMemoryState();
     std::lock_guard<std::mutex> lock(mtx);
     MemoryBlock* current = head;
 
@@ -116,6 +146,7 @@ int MemoryManager::create(int size, const std::string& type) {
             current->free = false;
             allocations[nextId] = current;
             std::cout << "CREATE: Asignado ID " << nextId << " (Tamano: " << current->size << ", Tipo: " << type << ", Direccion: " << current->address << ")\n";
+            dumpMemoryState("CREATE " + type, current->address, "");
             return nextId++;
 
         }
@@ -144,7 +175,7 @@ bool MemoryManager::set(int id, const std::string& type, void* value) {
 
 bool MemoryManager::setInt(int id, int value) {
     std::lock_guard<std::mutex> lock(mtx);
-    std::cout << "[DEBUG] SET llamado para ID " << id << std::endl;
+    std::cout << "[DEBUG] SET (int) llamado para ID " << id << std::endl;
 
     if (allocations.find(id) == allocations.end()) {
         std::cerr << "SET: Error, ID no encontrado.\n";
@@ -159,6 +190,8 @@ bool MemoryManager::setInt(int id, int value) {
 
     std::memcpy(block->address, &value, sizeof(int));  // <- aquí la corrección
     std::cout << "SET: Guardado en ID " << id << " -> " << value << "\n";
+
+    dumpMemoryState("SET INT", block->address, std::to_string(value));
     return true;
 }
 
@@ -179,6 +212,10 @@ bool MemoryManager::setDouble(int id, double value) {
 
     std::memcpy(block->address, &value, sizeof(double));
     std::cout << "SET: Guardado en ID " << id << " -> " << value << "\n";
+
+    dumpMemoryState("SET DOUBLE", block->address, std::to_string(value));
+
+
     return true;
 }
 
@@ -199,6 +236,9 @@ bool MemoryManager::setFloat(int id, float value) {
 
     std::memcpy(block->address, &value, sizeof(float));
     std::cout << "SET: Guardado en ID " << id << " -> " << value << "\n";
+
+    dumpMemoryState("SET FLOAT", block->address, std::to_string(value));
+
     return true;
 }
 
@@ -221,6 +261,8 @@ bool MemoryManager::increaseRefCount(int id) {
 
     allocations[id]->refCount++;
     std::cout << "INCREF: ID " << id << " ahora tiene refCount " << allocations[id]->refCount << "\n";
+
+
     return true;
 }
 
@@ -241,24 +283,60 @@ bool MemoryManager::decreaseRefCount(int id) {
         block->free = true;
         allocations.erase(id);
         std::cout << "DECREF: Bloque liberado.\n";
+        dumpMemoryState("DECREF (Liberado)", block->address, "");
     }
 
     return true;
 }
 
 
-void MemoryManager::dumpMemoryState() {
-    std::lock_guard<std::mutex> lock(mtx);
-    std::cout << "Estado actual de la memoria:\n";
+void MemoryManager::dumpMemoryState(const std::string& action, void* affectedAddress, const std::string& value) {
+    std::lock_guard<std::mutex> lock(dumpMtx);
+
+    // Obtener tiempo actual con milisegundos
+    auto now = std::chrono::system_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+    std::time_t timeNow = std::chrono::system_clock::to_time_t(now);
+    std::tm* localTime = std::localtime(&timeNow);
+
+    // Formatear nombre del archivo
+    std::ostringstream fileName;
+    fileName << "Dumps/memory_"
+             << std::put_time(localTime, "%Y%m%d_%H%M%S")
+             << "_" << std::setw(3) << std::setfill('0') << ms.count()
+             << ".txt";
+
+    std::ofstream logFile(fileName.str());
+    if (!logFile.is_open()) {
+        std::cerr << "[ERROR] No se pudo crear el archivo de dump." << std::endl;
+        return;
+    }
+
+    // Encabezado
+    logFile << "===== Estado de la Memoria =====\n";
+    logFile << "Accion: " << action << "\n";
+    logFile << "Direccion afectada: " << affectedAddress << "\n";
+    if (!value.empty()) {
+        logFile << "Valor modificado: " << value << "\n";
+    }
+    logFile << "Fecha y hora: " << std::put_time(localTime, "%Y-%m-%d %H:%M:%S")
+            << "." << std::setw(3) << std::setfill('0') << ms.count() << "\n";
+    logFile << "---------------------------------\n";
+
+    // Detalle de los bloques
     MemoryBlock* current = head;
     while (current) {
-        std::cout << "Direccion: " << current->address
-                  << " | Tamano: " << current->size
-                  << " | RefCount: " << current->refCount
-                  << " | Estado: " << (current->free ? "Libre" : "Ocupado") << "\n";
+        logFile << "Direccion: " << current->address
+                << " | Tamano: " << current->size
+                << " | RefCount: " << current->refCount
+                << " | Estado: " << (current->free ? "Libre" : "Ocupado")
+                << " | Tipo: " << current->type << "\n";
         current = current->next;
     }
+
+    logFile.close();
 }
+
 
 size_t MemoryManager::getTypeSize(const std::string& type) {
     if (type == "INT") return sizeof(int);
@@ -328,7 +406,6 @@ void MemoryManager::startServer(int port) {
         std::string response;
 
         if (action == "CREATE") {
-            cout << "Dod";
             std::string type;
             ss >> type;
             size_t size = getTypeSize(type);
@@ -337,11 +414,29 @@ void MemoryManager::startServer(int port) {
             response = (id != -1) ? "CREATED " + std::to_string(id) : "ERROR No memory";
         }
         else if (action == "SET") {
-            cout << "Prueba";
             int id;
-            int value;
-            ss >> id >> value;
-            response = setInt(id, value) ? "SET OK " : "ERROR SET failed";
+            std::string valueStr;
+            ss >> id >> valueStr;
+
+            std::string type = getType(id);
+            bool result = false;
+
+            if (type == "INT") {
+                int val = std::stoi(valueStr);
+                result = setInt(id, val);
+            } else if (type == "FLOAT") {
+                float val = std::stof(valueStr);
+                result = setFloat(id, val);
+            } else if (type == "DOUBLE") {
+                double val = std::stod(valueStr);
+                result = setDouble(id, val);
+            } else {
+                response = "ERROR Unknown type";
+            }
+
+            if (response.empty()) {
+                response = result ? "SET OK" : "ERROR SET failed";
+            }
         }
         else if (action == "GET") {
             int id;

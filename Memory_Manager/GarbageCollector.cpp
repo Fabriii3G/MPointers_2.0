@@ -28,6 +28,8 @@ void GarbageCollector::stop() {
 void GarbageCollector::run() {
     while (running) {
         std::this_thread::sleep_for(std::chrono::seconds(5));  // Revisión cada 5s
+        std::cout << "[GC] Ejecutando ciclo de recoleccion..." << std::endl;
         memoryManager->collectGarbage();
     }
 }
+

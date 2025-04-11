@@ -5,7 +5,7 @@
 #ifndef GARBAGECOLLECTOR_H
 #define GARBAGECOLLECTOR_H
 
-#include "MemoryManager.h"
+
 #include <thread>
 #include <atomic>
 

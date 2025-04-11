@@ -10,7 +10,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
-
+#include "GarbageCollector.h"
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -33,6 +33,8 @@ private:
     struct sockaddr_in serverAddr;
     std::vector<std::thread> clientThreads;
 
+    GarbageCollector gc;
+
     void acceptConnections();
     static void handleClient(int clientSocket);
 
@@ -41,6 +43,7 @@ private:
     MemoryBlock* head;
     std::unordered_map<int, MemoryBlock*> allocations;
     std::mutex mtx;
+    std::mutex dumpMtx;
     int nextId;
     void splitBlock(MemoryBlock* block, size_t size);
 
@@ -63,7 +66,7 @@ public:
     bool increaseRefCount(int id);
     bool decreaseRefCount(int id);
     void collectGarbage();  // Nuevo metodo para el GC
-    void dumpMemoryState();
+    void dumpMemoryState(const std::string& action, void* affectedAddress, const std::string& value = "");
 
 };
 

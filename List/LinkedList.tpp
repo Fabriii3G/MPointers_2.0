@@ -3,26 +3,26 @@
 
 #include <cstddef>
 #include <iostream>
-#include "..\MPointers\MPointer.h"
+#include "...\MPointers\MPointer.tpp"
 
-template <typename T>
+
 struct Node {
-    T data;
-    MPointer<Node<T>> next;
+    int data;
+    MPointer<Node> next;
 
     Node(const T& value) : data(value), next(nullptr) {}
 };
 
-template <typename T>
+
 class LinkedList {
 private:
-    MPointer<Node<T>> head;
-    size_t size;
+    MPointer<Node> head;
+
 public:
-    LinkedList() : head(nullptr), size(0) {}
+    LinkedList() : head(nullptr) {}
 
     void append(const T& value) {
-         MPointer<Node<T>> newNode = new Node<T>(value);
+        MPointer<Node> newNode = new Node(value);
         if (!head) {
             head = newNode;
         } else {
@@ -32,34 +32,12 @@ public:
             }
             current->next = newNode;
         }
-        size++;
+
     }
 
-    void remove(Node<T>* node) {
-        if (!node) return;
-        if (head == node) {
-            head = head->next;
-            delete node;
-            size--;
-            return;
-        }
-        Node<T>* current = head;
-        while (current && current->next != node) {
-            current = current->next;
-        }
-        if (current) {
-            current->next = node->next;
-            delete node;
-            size--;
-        }
-    }
-
-
-    size_t getSize() const { return size; }
-    MPointer<Node<T>> getHead() const { return head; }
 
     void print() const {
-         MPointer<Node<T>> current = head;
+        MPointer<Node> current = head;
         while (current) {
             std::cout << current->data << " ";
             current = current->next;

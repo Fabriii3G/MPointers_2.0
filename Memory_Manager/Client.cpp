@@ -9,13 +9,15 @@
 #pragma comment(lib, "ws2_32.lib")
 
 int main() {
-    MPointer<int>::Init(6060);
-    MPointer<int> ptr = MPointer<int>::New();
-    MPointer<int> ptr1 = MPointer<int>::New();
-    MPointer<int> ptr2 = MPointer<int>::New();
-    *ptr = 122323;
+    MPointer<float>::Init(6060);
+    MPointer<float> ptr = MPointer<float>::New();
+    MPointer<float> ptr1 = MPointer<float>::New();
+    MPointer<float> ptr2 = MPointer<float>::New();
+    *ptr = 3.14;
     *ptr2 = 123456;
     ptr1 = ptr;
+
+    *ptr = 4.17;
 
     return 0;
 }
