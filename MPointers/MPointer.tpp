@@ -24,18 +24,7 @@ void MPointer<T>::Init(int port) {
 // Constructor privado: Se usa solo dentro de New()
 template <typename T>
 MPointer<T>::MPointer(int objectID) : id(objectID) {
-    if (memoryManager) {
-        ptr = static_cast<T*>(memoryManager->get(id));
-    } else {
-        ptr = nullptr;
-    }
     std::cout << "[DEBUG] MPointer creado con ID " << id << std::endl;
-}
-
-// Metodo para inicializar el MemoryManager antes de usar MPointer
-template <typename T>
-void MPointer<T>::setMemoryManager(MemoryManager* manager) {
-    memoryManager = manager;
 }
 
 // Crea un nuevo MPointer, asignando memoria en MemoryManager
