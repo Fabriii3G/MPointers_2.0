@@ -3,32 +3,37 @@
 
 #include <cstddef>
 #include <iostream>
-#include "...\MPointers\MPointer.tpp"
+#include "..\MPointers\MPointer.tpp"
 
 
 struct Node {
     int data;
-    MPointer<Node> next;
+    MPointer<Node> next = MPointer<Node>::New();
 
-    Node(const T& value) : data(value), next(nullptr) {}
+    Node(int value){
+        data = value;
+        next = nullptr; }
 };
 
 
 class LinkedList {
 private:
-    MPointer<Node> head;
+    MPointer<Node> head = MPointer<Node>::New();
 
 public:
-    LinkedList() : head(nullptr) {}
+    LinkedList(){
+        head = nullptr;
+    }
 
-    void append(const T& value) {
-        MPointer<Node> newNode = new Node(value);
-        if (!head) {
+    void append(int value) {
+        MPointer<Node> newNode = MPointer<Node>::New();
+        *newNode = Node(value); // Asignar el dato (data = 10)
+        if (head) {
             head = newNode;
         } else {
-            Node<T>* current = head;
+            MPointer<Node> current = head;
             while (current->next) {
-                current = current->next;
+                current = (*current).next;
             }
             current->next = newNode;
         }

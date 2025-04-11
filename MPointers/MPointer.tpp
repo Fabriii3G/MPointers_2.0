@@ -46,7 +46,7 @@ MPointer<T> MPointer<T>::New() {
     else if (std::is_same<T, char>::value) type = "CHAR";
     else if (std::is_same<T, float>::value) type = "FLOAT";
     else if (std::is_same<T, double>::value) type = "DOUBLE";
-    else if (std::is_same<T, Node<int>>::value) type = "NODE";
+    else if (std::is_same<T, Node>::value) type = "NODE";
     else throw std::runtime_error("Tipo no soportado");
 
     std::string command = "CREATE " + type;
