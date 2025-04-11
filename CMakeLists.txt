@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD 14)
 #Define el ejecutable del servidor
 add_executable(Server
         "Memory_Manager/Servidor.cpp"
-        "Memory_Manager/Server.cpp"
         "Memory_Manager/MemoryManager.cpp"
         "Memory_Manager/GarbageCollector.cpp"
         "Memory_Manager/SocketClient.cpp"
